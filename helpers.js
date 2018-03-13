@@ -14,22 +14,27 @@ module.exports = {
         return `${('0' + date.getDate()).slice(-2)}.${('0' + (date.getMonth() + 1)).slice(-2)}.${date.getFullYear()} ${('0' + date.getHours()).slice(-2)}:${('0' + date.getMinutes()).slice(-2)}`
     },
     sendUnit(bot,id,firebase,match,count){
-        firebase.database().ref('goodsById/'+match).once("value", function (snapshot) {
-            var values = snapshot.val();
-            bot.sendPhoto(id,values.img,{
-                caption: `<b>${values.title}</b><a>\n\nОписание: ${values.description}\n\nЦена: ${values.price}₽\n\n${values.url}</a>`,
-                parse_mode: 'HTML',
-                reply_markup:{
-                    inline_keyboard: [
-                        [kb.plus10(match),kb.plus(match),kb.count(match,count),kb.minus(match),kb.del(match)],
-                        [kb.basket(match)],
-                        [kb.back_to_some_category(values.type),kb.back_to_home]
-                    ]
-                }
-            })
-        }, function (errorObject) {
-            //console.log("The read failed: " + errorObject);
-        });
+        try{
+            firebase.database().ref('goodsById/'+match).once("value", function (snapshot) {
+                var values = snapshot.val();
+                if(values===null)
+                    return;
+                bot.sendPhoto(id,values.img,{
+                    caption: `<b>${values.title}</b><a>\n\nОписание: ${values.description}\n\nЦена: ${values.price}₽\n\n${values.url}</a>`,
+                    parse_mode: 'HTML',
+                    reply_markup:{
+                        inline_keyboard: [
+                            [kb.plus10(match),kb.plus(match),kb.count(match,count),kb.minus(match),kb.del(match)],
+                            [kb.basket(match)],
+                            [kb.back_to_some_category(values.type),kb.back_to_home]
+                        ]
+                    }
+                })
+            }, function (errorObject) {
+                //console.log("The read failed: " + errorObject);
+            });
+        }catch(e){}
+
     },
     answerCallbackQuery(bot,id,time){
         bot.answerCallbackQuery(id,{

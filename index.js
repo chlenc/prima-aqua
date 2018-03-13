@@ -26,20 +26,24 @@ bot.onText(/\/g(.+)/, (msg, match) => {
         bot.deleteMessage(msg.chat.id,msg.message_id-1);
     }catch(e){
         //console.log(e.toString())
-    }
-    firebase.database().ref('users/'+msg.chat.id).once("value", function (snapshot) {
-        var values = snapshot.val();
-        var count;
-        try{
-            count = values.basket[match[1]].count;
-        }catch(e){
-            count = 0;
-        }
-        helpers.sendUnit(bot,msg.chat.id,firebase,match[1],count)
+    }try{
+        firebase.database().ref('users/'+msg.chat.id).once("value", function (snapshot) {
+            var values = snapshot.val();
+            var count;
+            try{
+                count = values.basket[match[1]].count;
+            }catch(e){
+                count = 0;
+            }
+            helpers.sendUnit(bot,msg.chat.id,firebase,match[1],count)
 
-    }, function (errorObject) {
-        //console.log("The read failed: " + errorObject);
-    });
+        }, function (errorObject) {
+            //console.log("The read failed: " + errorObject);
+        });
+    }catch(e){
+
+    }
+
 });
 
 bot.on('message', (msg) => {
