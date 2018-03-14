@@ -58,7 +58,7 @@ bot.on('message', (msg) => {
             {
                 parse_mode: 'HTML'
             }
-        )
+        );
         bot.sendMessage(chatId,frases.welcome(msg.chat.first_name),{
             reply_markup:{
                 remove_keyboard: true
@@ -71,10 +71,21 @@ bot.on('message', (msg) => {
 
 bot.on('callback_query', query => {
     const {chat, message_id, text} = query.message;
-    //console.log(query.data)
+    // console.log(query.data)
 
     if(query.data === kb.home.order.callback_data){
         bot.sendMessage(chat.id,frases.categories,keyboards.categories)
+    }
+    else if(query.data === kb.feedback.callback_data){
+        firebase.database().ref('users/'+chat.id).once("value", function (snapshot) {
+            var values = snapshot.val();
+            var msg = `${helpers.getDateTime()}\n<strong>Заявка на звонок:</strong>\n\nИмя: <a
+                    href="tg://user?id=${chat.id}">${chat.first_name}</a>\nНомер: ${values.phone_number}\n\n`;
+            bot.sendMessage(applicationChatId,msg,{parse_mode: 'HTML'});
+            bot.sendMessage(chat.id,frases.feedback,keyboards.home);
+        }, function (errorObject) {
+            //console.log("The read failed: " + errorObject);
+        });
     }
     else if(query.data === kb.home.action.callback_data){
         firebase.database().ref('actions/').once("value", function (snapshot) {
@@ -233,7 +244,7 @@ bot.on('callback_query', query => {
                     msg = '<code>Тут пусто :c</code>';
                 else{
                     for(var i = 0; i < values.length; i++)
-                        msg+=`<b>${values[i].title}</b> <a>\n Цена: ${values[i].price}₽\n/g${values[i].id}</a>\n\n`;
+                        msg+=`<b>${values[i].title}</b> <a>\nЦена: ${values[i].price}₽\nНажмите сюда👉 /g${values[i].id}</a>\n\n`;
                 }
                 bot.sendMessage(chat.id,msg,{
                     parse_mode: 'HTML',
@@ -260,9 +271,9 @@ bot.on('callback_query', query => {
                         var sum = 0;
                         for(var temp in values){
                             sum+=((+goods[temp].price)*(+values[temp].count));
-                            msg+=(`<b>${goods[temp].title}</b>\n<a>/g${temp}\n${goods[temp].price}₽ X ${values[temp].count} = ${(+goods[temp].price)*(+values[temp].count)}₽\n</a>`)
+                            msg+=(`<b>${goods[temp].title}</b>\n<a>/g${temp}\n${goods[temp].price}₽ X ${values[temp].count} = ${(+goods[temp].price)*(+values[temp].count)}₽\n</a>\n`)
                         }
-                        msg+=`<a>\nВсего: ${sum}₽</a>`
+                        msg+=`\n<a>\nВсего: ${sum}₽</a>`
                     }catch(e){
                         msg = '<code>Корзина пуста :c</code>'
                     }
@@ -328,10 +339,10 @@ bot.on('callback_query', query => {
                             for(var temp in values){
                                 sum+=((+goods[temp].price)*(+values[temp].count));
                                 msg+=(`<b>${goods[temp].title}</b>\n<a
-                            >/g${temp}\n${goods[temp].price}₽ X ${values[temp].count} = ${(+goods[temp].price)*(+values[temp].count)}₽\n</a>`)
+                            >/g${temp}\n${goods[temp].price}₽ X ${values[temp].count} = ${(+goods[temp].price)*(+values[temp].count)}₽\n</a>\n`)
                             }
                             msg+= `\n<b>Доставка:</b><a> ${deliv} </a>`
-                            msg+=`<b>\nВсего:</b><a> ${sum}₽</a>`
+                            msg+=`\n<b>\nВсего:</b><a> ${sum}₽</a>`
                         }catch(e){}
                         if(sum !== 0){
                             bot.sendMessage(applicationChatId,msg,{parse_mode: 'HTML'});
@@ -366,12 +377,12 @@ bot.on('callback_query', query => {
                         for(var temp in values){
                             sum+=((+goods[temp].price)*(+values[temp].count));
                             msg+=(`<b>${goods[temp].title}</b>\n<a
-                            >/g${temp}\n${goods[temp].price}₽ X ${values[temp].count} = ${(+goods[temp].price)*(+values[temp].count)}₽\n</a>`)
+                            >/g${temp}\n${goods[temp].price}₽ X ${values[temp].count} = ${(+goods[temp].price)*(+values[temp].count)}₽\n</a>\n`)
                         }
                         if(parseQuery.pay === undefined)
                             parseQuery.pay = 0;
                         msg+= `\n<b>Доставка:</b><a> ${deliv} на ${parseQuery.date} = ${parseQuery.pay}₽</a>`
-                        msg+=`<b>\nВсего:</b><a> ${sum+parseQuery.pay}₽</a>`
+                        msg+=`\n<b>\nВсего:</b><a> ${sum+parseQuery.pay}₽</a>`
                     }catch(e){}
                     if(sum !== 0){
                         bot.sendMessage(applicationChatId,msg,{parse_mode: 'HTML'});

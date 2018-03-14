@@ -3,7 +3,7 @@
 module.exports = {
     home: {
         order: {
-            text: 'Заказ',
+            text: 'Сделать заказ',
             callback_data: 'order'
         },
         action: {
@@ -18,6 +18,10 @@ module.exports = {
     back_to_categories: {
         text: 'Назад 🔙',
         callback_data: 'back_to_categories'
+    },
+    feedback: {
+        text: 'Заказать звонок',
+        callback_data: 'feedback'
     },
     basket(back) {
         return {

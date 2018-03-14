@@ -5,7 +5,7 @@ module.exports = {
         reply_markup: {
             keyboard: [
                 [{
-                    text : 'Поделиться номером телефона',
+                    text : 'Отправить свой номер ',
                     request_contact: true
                 }]
             ]//,
@@ -17,7 +17,8 @@ module.exports = {
             inline_keyboard: [
                 [kb.home.order],
                 [kb.basket('back_to_home'),
-                kb.home.action]
+                kb.home.action],
+                [kb.feedback]
             ]
         }
     },
@@ -36,21 +37,21 @@ module.exports = {
                     callback_data: ' '
                 }],
                 [{
-                    text: '📌19 литров',
+                    text: '  19 литров',
                     callback_data: JSON.stringify({
                         type: 'unit',
                         unit: 'water19'
                     })
                 },
                     {
-                        text: '📌от 5 до 8',
+                        text: '  от 5 до 8',
                         callback_data: JSON.stringify({
                             type: 'unit',
                             unit: 'water5to8'
                         })
                     }],
                 [{
-                    text: '📌от 0,33 до 1,5',
+                    text: '  от 0,33 до 1,5',
                     callback_data: JSON.stringify({
                         type: 'unit',
                         unit: 'water033'
@@ -61,34 +62,34 @@ module.exports = {
                     callback_data: ' '
                 }],
                 [{
-                    text: '📌Кулеры',
+                    text: '  Кулеры',
                     callback_data: JSON.stringify({
                         type: 'unit',
                         unit: 'coolers'
                     })
                 },
                 {
-                    text: '📌Помпы',
+                    text: '  Помпы',
                     callback_data: JSON.stringify({
                         type: 'unit',
                         unit: 'pumps'
                     })
                 }],
                 [{
-                    text: '📌Стойки',
+                    text: '  Стойки',
                     callback_data: JSON.stringify({
                         type: 'unit',
                         unit: 'racks'
                     })
                 }, {
-                    text: '📌Сервис',
+                    text: '  Сервис',
                     callback_data: JSON.stringify({
                         type: 'unit',
                         unit: 'service'
                     })
                 }],
                 [{
-                    text: '📌Аксессуары',
+                    text: '  Аксессуары',
                     callback_data: JSON.stringify({
                         type: 'unit',
                         unit: 'accessories'
@@ -104,35 +105,35 @@ module.exports = {
                     callback_data: ' '
                 }],
                 [{
-                    text: '📌Стаканчики',
+                    text: '  Стаканчики',
                     callback_data: JSON.stringify({
                         type: 'unit',
                         unit: 'cups'
                     })
                 },
                 {
-                    text: '📌Тарелки',
+                    text: '  Тарелки',
                     callback_data: JSON.stringify({
                         type: 'unit',
                         unit: 'dishes'
                     })
                 }],
                 [{
-                    text: '📌Ложки / Вилки / Ножи',
+                    text: '  Ложки / Вилки / Ножи',
                     callback_data: JSON.stringify({
                         type: 'unit',
                         unit: 'spoons'
                     })
                 }],
                 [{
-                    text: '📌Чай',
+                    text: '  Чай',
                     callback_data: JSON.stringify({
                         type: 'unit',
                         unit: 'tea'
                     })
                 },
                 {
-                    text: '📌Кофе',
+                    text: '  Кофе',
                     callback_data: JSON.stringify({
                         type: 'unit',
                         unit: 'coffee'

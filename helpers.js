@@ -24,7 +24,7 @@ module.exports = {
                     parse_mode: 'HTML',
                     reply_markup:{
                         inline_keyboard: [
-                            [kb.plus10(match),kb.plus(match),kb.count(match,count),kb.minus(match),kb.del(match)],
+                            [kb.minus(match),kb.count(match,count),kb.plus(match),kb.plus10(match),kb.del(match)],
                             [kb.basket(match)],
                             [kb.back_to_some_category(values.type),kb.back_to_home]
                         ]
