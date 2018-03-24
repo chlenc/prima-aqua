@@ -34,7 +34,7 @@ module.exports = {
     },
     submitOrder: {
             text: 'Оформить заказ',
-            callback_data: 'submitOrder'
+            callback_data: 'addressAsk'
     },
     back_to_some_category(unit) {
         return {
