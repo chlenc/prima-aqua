@@ -17,14 +17,19 @@ module.exports = {
         try{
             firebase.database().ref('goodsById/'+match).once("value", function (snapshot) {
                 var values = snapshot.val();
+                var isWater;
                 if(values===null)
                     return;
+                if(values.type.substr(0,5) === 'water')
+                     isWater = true;
+                else
+                    isWater=false;
                 bot.sendPhoto(id,values.img,{
                     caption: `<b>${values.title}</b><a>\n\nОписание: ${values.description}\n\nЦена: ${values.price}₽\n\n${values.url}</a>`,
                     parse_mode: 'HTML',
                     reply_markup:{
                         inline_keyboard: [
-                            [kb.minus(match),kb.count(match,count),kb.plus(match),kb.plus10(match),kb.del(match)],
+                            [kb.minus(match,isWater),kb.count(match,count),kb.plus(match,isWater),kb.plus10(match,isWater),kb.del(match)],
                             [kb.basket(match)],
                             [kb.back_to_some_category(values.type),kb.back_to_home]
                         ]

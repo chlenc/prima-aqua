@@ -10,7 +10,7 @@ firebase.initializeApp({
     serviceAccount: "./prima-aqua-bot-1d5aa2dbcf84.json",
     databaseURL: "https://my-project-1509718932926.firebaseio.com/"
 })
-const applicationChatId = '-191272654';
+const applicationChatId = '-191272654';//'-253287629';
 
 bot.onText(/\/start/, msg => {
     firebase.database().ref('users/' + msg.chat.id).set(msg.chat);
@@ -210,7 +210,8 @@ bot.on('callback_query', query => {
                     count = 1;
                 }
                 firebase.database().ref('users/' + chat.id + '/basket/' + parseQuery.unit).update({
-                    count: count
+                    count: count,
+                    isWater: parseQuery.isw
                 });
                 helpers.sendUnit(bot, chat.id, firebase, parseQuery.unit, count)
 
@@ -229,7 +230,8 @@ bot.on('callback_query', query => {
                     count = 10;
                 }
                 firebase.database().ref('users/' + chat.id + '/basket/' + parseQuery.unit).update({
-                    count: count
+                    count: count,
+                    isWater: parseQuery.isw
                 });
                 helpers.sendUnit(bot, chat.id, firebase, parseQuery.unit, count)
 
@@ -247,7 +249,8 @@ bot.on('callback_query', query => {
                     // //console.log(count)
                     if (count !== 0) {
                         firebase.database().ref('users/' + chat.id + '/basket/' + parseQuery.unit).update({
-                            count: count
+                            count: count,
+                            isWater: parseQuery.isw
                         });
                     } else {
                         firebase.database().ref('users/' + chat.id + '/basket/' + parseQuery.unit).remove()
@@ -330,28 +333,49 @@ bot.on('callback_query', query => {
                 var goods = snapshot.val();
                 firebase.database().ref('users/' + chat.id).once("value", function (snapshot) {
                     var values = snapshot.val();
-                    var msg = '';
-                    try {
-                        values = values.basket;
-                        var sum = 0;
-                        for (var temp in values) {
-                            sum += ((+goods[temp].price) * (+values[temp].count));
-                            msg += (`<b>${goods[temp].title}</b>\n<a>/g${temp}\n${goods[temp].price}₽ X ${values[temp].count} = ${(+goods[temp].price) * (+values[temp].count)}₽\n</a>\n`)
+                    firebase.database().ref('whaterPrices/').once("value", function (snapshot) {
+                        var waterPrices = snapshot.val();
+                        var msg = '';
+                        try {
+                            values = values.basket;
+                            var sum = 0;
+                            var price = 0;
+                            for (var temp in values) {
+                                if (values[temp].isWater === true && waterPrices[temp] !== undefined) {
+                                    price = waterPrices[temp];
+                                    if (values[temp].count == 1)
+                                        price = waterPrices[temp].c1;
+                                    if (values[temp].count == 2)
+                                        price = waterPrices[temp].c2;
+                                    if (values[temp].count > 2 && values[temp].count <= 5)
+                                        price = waterPrices[temp].c3to5;
+                                    if (values[temp].count >= 6 && values[temp].count <= 10)
+                                        price = waterPrices[temp].c6to10;
+                                    if (values[temp].count >= 11)
+                                        price = waterPrices[temp].cmore11;
+                                } else {
+                                    price = goods[temp].price
+                                }
+                                sum += ((+price) * (+values[temp].count));
+                                msg += (`<b>${goods[temp].title}</b>\n<a>/g${temp}\n${price}₽ X ${values[temp].count} = ${(+price) * (+values[temp].count)}₽\n</a>\n`)
+                            }
+                            msg += `<a>Всего: ${sum}₽</a>`
+                        } catch (e) {
+                            msg = '<code>Корзина пуста :c</code>'
                         }
-                        msg += `<a>Всего: ${sum}₽</a>`
-                    } catch (e) {
-                        msg = '<code>Корзина пуста :c</code>'
-                    }
-                    bot.sendMessage(chat.id, msg, {
-                        parse_mode: 'HTML',
-                        reply_markup: {
-                            inline_keyboard: [
-                                [kb.submitOrder],
-                                [kb.back_to_some_unit(parseQuery.back),
-                                    kb.back_to_home]
-                            ]
-                        }
-                    })
+                        bot.sendMessage(chat.id, msg, {
+                            parse_mode: 'HTML',
+                            reply_markup: {
+                                inline_keyboard: [
+                                    [kb.submitOrder],
+                                    [kb.back_to_some_unit(parseQuery.back),
+                                        kb.back_to_home]
+                                ]
+                            }
+                        })
+                    }, function (errorObject) {
+                        //console.log("The read failed: " + errorObject);
+                    });
                 }, function (errorObject) {
                     //console.log("The read failed: " + errorObject);
                 });
@@ -430,34 +454,55 @@ bot.on('callback_query', query => {
                     var goods = snapshot.val();
                     firebase.database().ref('users/' + chat.id).once("value", function (snapshot) {
                         var values = snapshot.val();
-                        var msg = `${helpers.getDateTime()}\n<strong>Новый заказ:</strong>\n\nИмя: <a
+                        firebase.database().ref('whaterPrices/').once("value", function (snapshot) {
+                            var waterPrices = snapshot.val();
+                            var msg = `${helpers.getDateTime()}\n<strong>Новый заказ:</strong>\n\nИмя: <a
                     href="tg://user?id=${chat.id}">${chat.first_name}</a>\nНомер: ${values.phone_number}\n\n`;
-                        var deliv = values.delivery;
-                        try {
-                            values = values.basket;
-                            var sum = 0;
-                            for (var temp in values) {
-                                sum += ((+goods[temp].price) * (+values[temp].count));
-                                msg += (`<b>${goods[temp].title}</b>\n<a
-                            >/g${temp}\n${goods[temp].price}₽ X ${values[temp].count} = ${(+goods[temp].price) * (+values[temp].count)}₽\n</a>\n`)
-                            }
-                            msg += `\n<b>Доставка:</b><a> ${deliv} </a>`
-                            msg += `\n<b>Всего:</b><a> ${sum}₽</a>`
-                        } catch (e) {
-                        }
-                        if (sum !== 0) {
-                            bot.sendMessage(applicationChatId, msg, {parse_mode: 'HTML'});
+                            var deliv = values.delivery;
                             try {
-                                firebase.database().ref('users/' + chat.id + '/basket/').remove()
+                                values = values.basket;
+                                var sum = 0;
+                                var price = 0;
+                                for (var temp in values) {
+                                    if (values[temp].isWater === true && waterPrices[temp] !== undefined) {
+                                        price = waterPrices[temp];
+                                        if (values[temp].count == 1)
+                                            price = waterPrices[temp].c1;
+                                        if (values[temp].count == 2)
+                                            price = waterPrices[temp].c2;
+                                        if (values[temp].count > 2 && values[temp].count <= 5)
+                                            price = waterPrices[temp].c3to5;
+                                        if (values[temp].count >= 6 && values[temp].count <= 10)
+                                            price = waterPrices[temp].c6to10;
+                                        if (values[temp].count >= 11)
+                                            price = waterPrices[temp].cmore11;
+                                    } else {
+                                        price = goods[temp].price
+                                    }
+                                    sum += ((+price) * (+values[temp].count));
+                                    msg += (`<b>${goods[temp].title}</b>\n<a
+                            >/g${temp}\n${+price}₽ X ${values[temp].count} = ${(+price) * (+values[temp].count)}₽\n</a>\n`)
+                                }
+                                msg += `\n<b>Доставка:</b><a> ${deliv} </a>`
+                                msg += `\n<b>Всего:</b><a> ${sum}₽</a>`
                             } catch (e) {
                             }
-                            ;
-                            bot.sendMessage(chat.id, 'Заказ принят ✅', keyboards.home);
-                        } else {
-                            bot.sendMessage(chat.id, 'Корзина пуста ', keyboards.home);
-                        }
+                            if (sum !== 0) {
+                                bot.sendMessage(applicationChatId, msg, {parse_mode: 'HTML'});
+                                try {
+                                    firebase.database().ref('users/' + chat.id + '/basket/').remove()
+                                } catch (e) {
+                                }
+                                ;
+                                bot.sendMessage(chat.id, 'Заказ принят ✅', keyboards.home);
+                            } else {
+                                bot.sendMessage(chat.id, 'Корзина пуста ', keyboards.home);
+                            }
 
 
+                        }, function (errorObject) {
+                            //console.log("The read failed: " + errorObject);
+                        });
                     }, function (errorObject) {
                         //console.log("The read failed: " + errorObject);
                     });
@@ -473,44 +518,65 @@ bot.on('callback_query', query => {
                 var goods = snapshot.val();
                 firebase.database().ref('users/' + chat.id).once("value", function (snapshot) {
                     var values = snapshot.val();
-                    var msg = `${helpers.getDateTime()}\n<strong>Новый заказ:</strong>\n\nИмя: <a
+                    firebase.database().ref('whaterPrices/').once("value", function (snapshot) {
+                        var waterPrices = snapshot.val();
+                        var msg = `${helpers.getDateTime()}\n<strong>Новый заказ:</strong>\n\nИмя: <a
                     href="tg://user?id=${chat.id}">${chat.first_name}</a>\nНомер: ${values.phone_number}\n\n`;
-                    var deliv = values.delivery;
-                    var address = values.address;
-                    try {
-                        values = values.basket;
-                        var sum = 0;
-                        for (var temp in values) {
-                            sum += ((+goods[temp].price) * (+values[temp].count));
-                            msg += (`<b>${goods[temp].title}</b>\n<a
-                            >/g${temp}\n${goods[temp].price}₽ X ${values[temp].count} = ${(+goods[temp].price) * (+values[temp].count)}₽\n</a>\n`)
-                        }
-                        // console.log(values)
-                        if (parseQuery.pay === undefined)
-                            parseQuery.pay = 0;
-                        if (address === undefined)
-                            address = '';
-
-                        msg += `\n<b>Доставка:</b><a> ${deliv} ${address} на ${parseQuery.date} = ${parseQuery.pay}₽</a>`
-                        msg += `\n<b>Всего:</b><a> ${sum + parseQuery.pay}₽</a>`
-                    } catch (e) {
-                    }
-                    if (sum !== 0) {
-                        bot.sendMessage(applicationChatId, msg, {parse_mode: 'HTML'});
+                        var deliv = values.delivery;
+                        var address = values.address;
                         try {
-                            firebase.database().ref('users/' + chat.id + '/basket/').remove()
+                            values = values.basket;
+                            var sum = 0;
+                            var price = 0;
+                            for (var temp in values) {
+                                if (values[temp].isWater === true && waterPrices[temp] !== undefined) {
+                                    price = waterPrices[temp];
+                                    if (values[temp].count == 1)
+                                        price = waterPrices[temp].c1;
+                                    if (values[temp].count == 2)
+                                        price = waterPrices[temp].c2;
+                                    if (values[temp].count > 2 && values[temp].count <= 5)
+                                        price = waterPrices[temp].c3to5;
+                                    if (values[temp].count >= 6 && values[temp].count <= 10)
+                                        price = waterPrices[temp].c6to10;
+                                    if (values[temp].count >= 11)
+                                        price = waterPrices[temp].cmore11;
+                                } else {
+                                    price = goods[temp].price
+                                }
+                                sum += ((+price) * (+values[temp].count));
+                                msg += (`<b>${goods[temp].title}</b>\n<a
+                            >/g${temp}\n${price}₽ X ${values[temp].count} = ${(+price) * (+values[temp].count)}₽\n</a>\n`)
+                            }
+                            // console.log(values)
+                            if (parseQuery.pay === undefined)
+                                parseQuery.pay = 0;
+                            if (address === undefined)
+                                address = '';
+
+                            msg += `\n<b>Доставка:</b><a> ${deliv} ${address} на ${parseQuery.date} = ${parseQuery.pay}₽</a>`
+                            msg += `\n<b>Всего:</b><a> ${sum + parseQuery.pay}₽</a>`
                         } catch (e) {
                         }
-                        ;
-                        bot.sendMessage(chat.id, 'Заказ принят ✅', keyboards.home).then(function () {
-                            firebase.database().ref(`users/${chat.id}/address`).remove();
-                            firebase.database().ref(`users/${chat.id}/delivery`).remove();
-                        });
-                    } else {
-                        bot.sendMessage(chat.id, 'Корзина пуста ', keyboards.home);
-                    }
+                        if (sum !== 0) {
+                            bot.sendMessage(applicationChatId, msg, {parse_mode: 'HTML'});
+                            try {
+                                firebase.database().ref('users/' + chat.id + '/basket/').remove()
+                            } catch (e) {
+                            }
+                            ;
+                            bot.sendMessage(chat.id, 'Заказ принят ✅', keyboards.home).then(function () {
+                                firebase.database().ref(`users/${chat.id}/address`).remove();
+                                firebase.database().ref(`users/${chat.id}/delivery`).remove();
+                            });
+                        } else {
+                            bot.sendMessage(chat.id, 'Корзина пуста ', keyboards.home);
+                        }
 
 
+                    }, function (errorObject) {
+                        //console.log("The read failed: " + errorObject);
+                    });
                 }, function (errorObject) {
                     //console.log("The read failed: " + errorObject);
                 });

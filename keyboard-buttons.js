@@ -54,30 +54,33 @@ module.exports = {
             })
         }
     },
-    plus10(unit){
+    plus10(unit,isWater){
         return {
             text: '+10',
             callback_data: JSON.stringify({
                 type: 'plus10',
-                unit:  unit
+                unit:  unit,
+                isw: isWater
             })
         }
     },
-    plus(unit){
+    plus(unit,isWater){
         return {
             text: '+',
             callback_data: JSON.stringify({
                 type: 'plus',
-                unit:  unit
+                unit:  unit,
+                isw: isWater
             })
         }
     },
-    minus(unit){
+    minus(unit,isWater){
         return {
             text: '-',
             callback_data: JSON.stringify({
                 type: 'minus',
-                unit:  unit
+                unit:  unit,
+                isw: isWater
             })
         }
     },
