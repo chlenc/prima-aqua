@@ -132,7 +132,7 @@ module.exports = {
  function getSpbOffsetDate() {
      var out = [];
      var date = new Date();
-     for(var i = 0; i<=5;i++){
+     for(var i = 1; i<=6;i++){
          var day = (new Date(date.getFullYear(),date.getMonth(),date.getDate()+i)).getDay();
          if(day === 0){
              continue
@@ -148,7 +148,7 @@ module.exports = {
 function getmurOffsetDate() {
     var out = [];
     var date = new Date();
-    for(var i = 0; i<=5;i++){
+    for(var i = 1; i<=6;i++){
         var day = (new Date(date.getFullYear(),date.getMonth(),date.getDate()+i)).getDay();
         if(day === 6){
             out.push(getOffsetDate(date,i,'10:00 до 16:00'))
