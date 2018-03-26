@@ -53,22 +53,28 @@ bot.on('message', (msg) => {
         firebase.database().ref('users/' + chatId).update({
             phone_number: msg.contact.phone_number
         });
-        bot.sendMessage(
-            applicationChatId,
-            `${helpers.getDateTime()}\n<b>Новый клиент:</b>\n\nИмя: <a href="tg://user?id=${msg.chat.id}">${msg.chat.first_name}</a>\nНомер: ${msg.contact.phone_number}`,
-            {
-                parse_mode: 'HTML'
+        firebase.database().ref('clientBase/').once("value", function (snapshot) {
+            var clients = snapshot.val();
+            if (clients[msg.contact.phone_number.replace("+", "")] == undefined) {
+                bot.sendMessage(
+                    applicationChatId,
+                    `${helpers.getDateTime()}\n<b>Новый клиент:</b>\n\nИмя: <a href="tg://user?id=${msg.chat.id}">${msg.chat.first_name}</a>\nНомер: ${msg.contact.phone_number}`,
+                    {
+                        parse_mode: 'HTML'
+                    }
+                );
             }
-        );
-        bot.sendMessage(chatId, frases.welcome(msg.chat.first_name), {
-            reply_markup: {
-                remove_keyboard: true
-            }
-        })
-        bot.sendMessage(chatId, frases.home, keyboards.home)
+        }, function (errorObject) {
+            //console.log("The read failed: " + errorObject);
+        }).then(function () {
+            bot.sendMessage(chatId, frases.welcome(msg.chat.first_name), {
+                reply_markup: {
+                    remove_keyboard: true
+                }
+            })
+            bot.sendMessage(chatId, frases.home, keyboards.home)
+        });
     }
-    ;
-
 });
 
 bot.on('callback_query', query => {
