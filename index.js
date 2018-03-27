@@ -120,7 +120,10 @@ bot.on('callback_query', query => {
         });
     }
     else if (query.data === kb.back_to_home.callback_data) {
-        bot.sendMessage(chat.id, frases.home, keyboards.home)
+        bot.sendMessage(chat.id, frases.home, keyboards.home).then(function () {
+            firebase.database().ref(`users/${chat.id}/address`).remove();
+            firebase.database().ref(`users/${chat.id}/delivery`).remove();
+        });
     }
     else if (query.data === kb.back_to_categories.callback_data) {
         bot.sendMessage(chat.id, frases.categories, keyboards.categories)
@@ -378,7 +381,10 @@ bot.on('callback_query', query => {
                                         kb.back_to_home]
                                 ]
                             }
-                        })
+                        }).then(function () {
+                            firebase.database().ref(`users/${chat.id}/address`).remove();
+                            firebase.database().ref(`users/${chat.id}/delivery`).remove();
+                        });
                     }, function (errorObject) {
                         //console.log("The read failed: " + errorObject);
                     });
@@ -415,31 +421,38 @@ bot.on('callback_query', query => {
                 }, function (errorObject) {
                     //console.log("The read failed: " + errorObject);
                 });
-            }
-
-            firebase.database().ref('delivery/').once("value", function (snapshot) {
-                var values = snapshot.val();
-                for (var i = 0; i < values.length; i++) {
-                    for (var j = 0; j < values[i].length; j++) {
-                        if (values[i][j] !== '🚚 Доставка в пригороды 🏘') {
-                            // //console.log(values[i][j].callback_data)
-                            values[i][j].callback_data = JSON.stringify({
-                                type: 'd',
-                                data: values[i][j].callback_data.data
-                            });
+                firebase.database().ref('users/' + chat.id).update({
+                    delivery: ' '
+                });
+                bot.sendMessage(chat.id, ' Выберите дату доставки', helpers.spbDeliv())
+            } else {
+                firebase.database().ref('delivery/').once("value", function (snapshot) {
+                    var values = snapshot.val();
+                    for (var i = 0; i < values.length; i++) {
+                        for (var j = 0; j < values[i].length; j++) {
+                            if (values[i][j] !== '🚚 Доставка в пригороды 🏘') {
+                                // //console.log(values[i][j].callback_data)
+                                values[i][j].callback_data = JSON.stringify({
+                                    type: 'd',
+                                    data: values[i][j].callback_data.data
+                                });
+                            }
                         }
                     }
-                }
-                values.push([kb.basket('back_to_home'), kb.back_to_home])
-                bot.sendMessage(chat.id, 'Выберите район доставки:', {
-                    reply_markup: {
-                        inline_keyboard: values
-                    }
-                })
-                return
-            }, function (errorObject) {
-                //console.log("The read failed: " + errorObject);
-            });
+                    values.push([kb.basket('back_to_home')])
+                    values.push([kb.back_to_home])
+                    bot.sendMessage(chat.id, 'Выберите район доставки:', {
+                        reply_markup: {
+                            inline_keyboard: values
+                        }
+                    })
+
+                }, function (errorObject) {
+                    //console.log("The read failed: " + errorObject);
+                });
+            }
+
+
         }
         else if (parseQuery.type === 'd') {
             firebase.database().ref('users/' + chat.id).update({
@@ -469,6 +482,7 @@ bot.on('callback_query', query => {
                                 values = values.basket;
                                 var sum = 0;
                                 var price = 0;
+                                var to_client = ' ';
                                 for (var temp in values) {
                                     if (values[temp].isWater === true && waterPrices[temp] !== undefined) {
                                         price = waterPrices[temp];
@@ -488,9 +502,13 @@ bot.on('callback_query', query => {
                                     sum += ((+price) * (+values[temp].count));
                                     msg += (`<b>${goods[temp].title}</b>\n<a
                             >/g${temp}\n${+price}₽ X ${values[temp].count} = ${(+price) * (+values[temp].count)}₽\n</a>\n`)
+                                    to_client += (`<b>${goods[temp].title}</b>\n<a
+                            >/g${temp}\n${+price}₽ X ${values[temp].count} = ${(+price) * (+values[temp].count)}₽\n</a>\n`)
                                 }
                                 msg += `\n<b>Доставка:</b><a> ${deliv} </a>`
                                 msg += `\n<b>Всего:</b><a> ${sum}₽</a>`
+                                to_client += `\n<b>Доставка:</b><a> ${deliv} </a>`
+                                to_client += `\n<b>Всего:</b><a> ${sum}₽</a>`
                             } catch (e) {
                             }
                             if (sum !== 0) {
@@ -499,8 +517,15 @@ bot.on('callback_query', query => {
                                     firebase.database().ref('users/' + chat.id + '/basket/').remove()
                                 } catch (e) {
                                 }
-                                ;
-                                bot.sendMessage(chat.id, 'Заказ принят ✅', keyboards.home);
+
+                                bot.sendMessage(chat.id, 'Ваш заказ: \n' + to_client, {
+                                    parse_mode: 'HTML'
+                                })
+
+                                bot.sendMessage(chat.id, 'Спасибо за заказ! В ближайшее время с  Вами свяжется оператор для подтверждения ближайшего интервала доставки.', keyboards.home).then(function () {
+                                    firebase.database().ref(`users/${chat.id}/address`).remove();
+                                    firebase.database().ref(`users/${chat.id}/delivery`).remove();
+                                });
                             } else {
                                 bot.sendMessage(chat.id, 'Корзина пуста ', keyboards.home);
                             }
@@ -530,6 +555,7 @@ bot.on('callback_query', query => {
                     href="tg://user?id=${chat.id}">${chat.first_name}</a>\nНомер: ${values.phone_number}\n\n`;
                         var deliv = values.delivery;
                         var address = values.address;
+                        var to_client = ' ';
                         try {
                             values = values.basket;
                             var sum = 0;
@@ -553,6 +579,8 @@ bot.on('callback_query', query => {
                                 sum += ((+price) * (+values[temp].count));
                                 msg += (`<b>${goods[temp].title}</b>\n<a
                             >/g${temp}\n${price}₽ X ${values[temp].count} = ${(+price) * (+values[temp].count)}₽\n</a>\n`)
+                                to_client += (`<b>${goods[temp].title}</b>\n<a
+                            >/g${temp}\n${price}₽ X ${values[temp].count} = ${(+price) * (+values[temp].count)}₽\n</a>\n`)
                             }
                             // console.log(values)
                             if (parseQuery.pay === undefined)
@@ -562,6 +590,8 @@ bot.on('callback_query', query => {
 
                             msg += `\n<b>Доставка:</b><a> ${deliv} ${address} на ${parseQuery.date} = ${parseQuery.pay}₽</a>`
                             msg += `\n<b>Всего:</b><a> ${sum + parseQuery.pay}₽</a>`
+                            to_client += `\n<b>Доставка:</b><a> ${deliv} ${address} на ${parseQuery.date} = ${parseQuery.pay}₽</a>`
+                            to_client += `\n<b>Всего:</b><a> ${sum + parseQuery.pay}₽</a>`
                         } catch (e) {
                         }
                         if (sum !== 0) {
@@ -570,8 +600,10 @@ bot.on('callback_query', query => {
                                 firebase.database().ref('users/' + chat.id + '/basket/').remove()
                             } catch (e) {
                             }
-                            ;
-                            bot.sendMessage(chat.id, 'Заказ принят ✅', keyboards.home).then(function () {
+                            bot.sendMessage(chat.id, 'Ваш заказ: \n' + to_client, {
+                                parse_mode: 'HTML'
+                            });
+                            bot.sendMessage(chat.id, 'Спасибо за заказ! В ближайшее время с  Вами свяжется оператор для подтверждения удобного времени доставки.', keyboards.home).then(function () {
                                 firebase.database().ref(`users/${chat.id}/address`).remove();
                                 firebase.database().ref(`users/${chat.id}/delivery`).remove();
                             });

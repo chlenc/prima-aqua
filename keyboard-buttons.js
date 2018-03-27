@@ -25,7 +25,7 @@ module.exports = {
     },
     basket(back) {
         return {
-            text: 'Корзина 🛒',
+            text: 'Перейти в корзину 🛒',
             callback_data: JSON.stringify({
                 type: 'basket',
                 back: back

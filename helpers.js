@@ -77,7 +77,8 @@ module.exports = {
                             date:getOffsetDate(date,2)
                         })
                     }],
-                    [kb.basket('back_to_home'),kb.back_to_home]
+                    [kb.basket('back_to_home')],[kb.back_to_home]
+
                 ]
             }
         }
@@ -95,7 +96,8 @@ module.exports = {
                 })
             }])
         }
-        key.push([kb.basket('back_to_home'),kb.back_to_home]);
+        key.push([kb.basket('back_to_home')]);
+        key.push([kb.back_to_home]);
         return {
             reply_markup: {
                 inline_keyboard: key
@@ -115,7 +117,8 @@ module.exports = {
                 })
             }])
         }
-        key.push([kb.basket('back_to_home'),kb.back_to_home]);
+        key.push([kb.basket('back_to_home')]);
+        key.push([kb.back_to_home]);
         return {
             reply_markup: {
                 inline_keyboard: key
@@ -126,9 +129,10 @@ module.exports = {
  function getOffsetDate(date,offset,time) {
     if(time == undefined)
         time = '';
-     return (('0' + (date.getDate()+offset)).slice(-2) + '.' + ('0' + (date.getMonth() + 1)).slice(-2) + '.' + date.getFullYear()+' '+time)
+    date = new Date(date.getFullYear(),date.getMonth(),date.getDate()+offset)
+     return (('0' + (date.getDate())).slice(-2) + '.' + ('0' + (date.getMonth() + 1)).slice(-2) + '.' + date.getFullYear()+' '+time)
  }
- 
+
  function getSpbOffsetDate() {
      var out = [];
      var date = new Date();
@@ -148,7 +152,7 @@ module.exports = {
 function getmurOffsetDate() {
     var out = [];
     var date = new Date();
-    for(var i = 1; i<=6;i++){
+    for(var i = 0; i<=6;i++){
         var day = (new Date(date.getFullYear(),date.getMonth(),date.getDate()+i)).getDay();
         if(day === 6){
             out.push(getOffsetDate(date,i,'10:00 до 16:00'))

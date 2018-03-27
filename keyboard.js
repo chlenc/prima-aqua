@@ -16,8 +16,8 @@ module.exports = {
         reply_markup: {
             inline_keyboard: [
                 [kb.home.order],
-                [kb.basket('back_to_home'),
-                kb.home.action],
+                [kb.basket('back_to_home')],
+                [kb.home.action],
                 [kb.feedback]
             ]
         }
