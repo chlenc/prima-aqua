@@ -5,7 +5,7 @@ module.exports = {
         reply_markup: {
             keyboard: [
                 [{
-                    text : 'Отправить свой номер ',
+                    text : 'Нажмите кнопку ниже для отправки номера',
                     request_contact: true
                 }]
             ]//,
